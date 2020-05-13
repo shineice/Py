@@ -9,51 +9,9 @@ import numpy as np
 
 conn=pyodbc.connect('dsn=NetSuite;UID=RHung@Top-Line.com;PWD=Netsuite888')
 sqld=datetime.today().strftime("%Y/%m/%d")
-ALLdata="""
-select
-i.name as 'Itemnumber',
-i.weight as 'Cubic_Feet',
-inventory.inv as "inventory",
-price.cost as 'cost',
-inventory.Loc as "location",
-sts.status as "Status",
-i.item_id as "ID",
-imem.name as "mem"
-from 
-    items i
-    left join (select ilm.item_id ,  ilm.available_count as inv , loc.NAME as "Loc"
-               from item_location_map ilm
-               join locations loc on loc.location_id=ilm.LOCATION_ID
-               where 
-               available_count>0 and
-               Loc.NAME not like '%In Transit%') as inventory on inventory.item_id=i.item_id
-    left join (select LIST_ID, LIST_ITEM_NAME as "status"
-               from item_status
-               ) as sts on sts.LIST_ID=i.STATUS_ID
-    left join (select item_id,ITEM_UNIT_PRICE as cost from item_prices ip
-    where ip.ITEM_PRICE_ID = '102' and ip.isinactive = 'No')as price on price.item_id=i.item_id
-    left join item_group ig on ig.parent_id=i.item_id
-    left join items imem on imem.item_id=ig.member_id
-where
-i.isinactive = 'No' and
-i.STATUS_ID is not null 
-
-order by i.name
-
-"""
-
-
-
-
-items=pd.read_sql(ALLdata,conn)
-conn.close()
-
-items.to_csv("items_all.csv",index=False)
 
 
 #read Net Suite data
-conn=pyodbc.connect('dsn=NetSuite;UID=RHung@Top-Line.com;PWD=Netsuite888')
-sqld=datetime.today().strftime("%Y/%m/%d")
 ALLdata="""
 select
 i.name as 'Itemnumber',
