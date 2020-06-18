@@ -1,0 +1,163 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[61]:
+
+
+import pandas as pd
+import numpy as np
+
+
+# In[62]:
+
+
+poll = pd.read_excel(r"06.列管事業污染源裁處資料_117706.xlsx")
+
+
+# In[66]:
+
+
+poll=poll.loc[poll['APPEAL_OR_RESCIND'].str.contains('撤銷|錯誤|另立裁處書',na=False) == False]
+poll=poll.loc[poll['PETITION_RESULTS'].str.contains('撤銷|錯誤|另立裁處書',na=False) == False]
+
+
+# In[68]:
+
+
+pd.set_option('display.max_columns', None)
+poll.drop_duplicates(inplace=True)
+
+
+# In[70]:
+
+
+fac=pd.read_excel(r"04.登記工廠名錄_94099.xlsx") #統一編號 is float
+fac1=fac
+
+
+# In[71]:
+
+
+fac1['工廠登記編號']=fac1['工廠登記編號'].str.extract(r'(^T\d{7})',expand=True)
+fac1=fac1[fac1['工廠登記編號'].isnull() == False]
+
+
+# In[72]:
+
+
+#轉成字串並補足八碼
+fac1['統一編號']=fac1['統一編號'].astype(int)
+fac1['統一編號']=fac1['統一編號'].astype(str)
+fac1['統一編號']=fac1['統一編號'].str.zfill(8)
+
+
+# In[73]:
+
+
+file1=pd.DataFrame.merge(poll, fac1, how='left',  left_on='FAC_UNIFORMNO', right_on='統一編號')
+
+
+# In[74]:
+
+
+file1=file1[file1['工廠登記編號'].isnull() == False]
+file1.drop_duplicates(inplace=True)
+file1
+
+
+# In[75]:
+
+
+
+file1=file1.drop(['TRANSGRESS_LAW','OPENINFOR','LAWSUIT_DATE_1','ILLEGAL_MONEY','TRACK_ILLEGAL_MONEY','COUNTY_CODE','PETITION_AGENCY',
+'GIST_DEFINE','IMPROVE_DEADLINE','INSPECTION_CONDITION','TRANSGRESS_CONTROL_ID','IS_IMPROVE','INSPECTION_DATETIME_S',
+'PAYMENTSTATE','ISREMINDER','ISADMINCOURT','IsReduceMoney'], axis=1)
+file1
+
+
+# In[ ]:
+
+
+
+
+
+# In[12]:
+
+
+file1.to_csv('臨登_裁處合併20200616.csv',encoding='utf_8_sig')
+
+
+# ## dataset 2
+
+# In[76]:
+
+
+tax=pd.read_excel('03.全國營業(稅籍)登記資料集_製造業_144327.xlsx') #統一編號 is int
+
+
+# In[77]:
+
+
+pd.set_option('display.max_columns', None)
+tax.head(5)
+
+
+# In[78]:
+
+
+tax['統一編號']=tax['統一編號'].astype(str)
+tax['統一編號']=tax['統一編號'].str.zfill(8)
+
+
+# In[79]:
+
+
+fac2=fac[fac['工廠登記編號'].isnull() == False]
+fac2=fac2.dropna(subset=['統一編號'])
+fac2['統一編號']=fac2['統一編號'].astype(int)
+fac2['統一編號']=fac2['統一編號'].astype(str)
+fac2['統一編號']=fac2['統一編號'].str.zfill(8)
+
+
+# In[119]:
+
+
+data=pd.DataFrame.merge(tax, poll, how='left',left_on='統一編號',right_on='FAC_UNIFORMNO')
+
+
+# In[120]:
+
+
+data=data[data['FAC_NAME'].isnull() == False]
+
+
+# In[121]:
+
+
+data=pd.DataFrame.merge(data, fac2, how='left',left_on='FAC_UNIFORMNO',right_on='統一編號')
+
+
+# In[122]:
+
+
+data=data[data['工廠名稱'].isnull() == True]
+
+
+# In[124]:
+
+
+pd.set_option('display.max_columns', None)
+data.drop_duplicates(inplace=False)
+
+
+# In[128]:
+
+
+data.to_csv('無工廠有裁罰20200618.csv',encoding='utf_8_sig')
+
+
+# In[ ]:
+
+
+
+
